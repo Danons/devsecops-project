@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Todo App</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Daftar Tugas</h1>
+            <a href="/logout">Logout</a>
+        </div>
+
+        <form action="/tasks" method="POST" class="task-form">
+            <input type="text" name="title" placeholder="Tugas baru..." required>
+            <button type="submit">Tambah</button>
+        </form>
+
+        <ul class="task-list">
+            <% tasks.forEach(task => { %>
+                <li class="<%= task.completed ? 'completed' : '' %>">
+                    <span><%= task.title %></span>
+                    <div class="actions">
+                        <form action="/tasks/<%= task.id %>/toggle" method="POST" style="display:inline;">
+                            <button type="submit">Selesai/Batal</button>
+                        </form>
+                        <form action="/tasks/<%= task.id %>/delete" method="POST" style="display:inline;">
+                            <button type="submit" class="delete">Hapus</button>
+                        </form>
+                    </div>
+                </li>
+            <% }) %>
+        </ul>
+    </div>
+</body>
+</html>

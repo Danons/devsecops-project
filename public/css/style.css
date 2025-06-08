@@ -1,0 +1,6 @@
+body { font-family: sans-serif; background: #f4f4f4; }
+.container { max-width: 600px; margin: 50px auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+.completed { text-decoration: line-through; color: #888; }
+.task-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; }
+.actions button { margin-left: 5px; border: none; padding: 5px 10px; cursor: pointer; }
+.delete { background: #e74c3c; color: white; }
