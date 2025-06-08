@@ -39,8 +39,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run ESLint (Linting)
-        run: npx eslint . --ext .js # Anda perlu konfigurasi ESLint
+      # - name: Run ESLint (Linting)
+        # run: npx eslint . --ext .js # Anda perlu konfigurasi ESLint
         # Untuk kesederhanaan, kita lewati setup ESLint. Tambahkan jika perlu.
 
       - name: Run NPM Audit (Dependency Scanning)
