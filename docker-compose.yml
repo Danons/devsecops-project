@@ -5,23 +5,29 @@ services:
       - "3001:3000"
     env_file:
       - .env
-    # Menambahkan depends_on agar aplikasi menunggu database siap
+    # PERUBAHAN KUNCI: App hanya akan start jika healthcheck db berhasil
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
-    image: postgres:15-alpine # Menggunakan image resmi PostgreSQL
+    image: postgres:15-alpine
     restart: always
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      # Mengekspos port database ke host (opsional, untuk debugging)
       - "5432:5432"
     volumes:
-      # Membuat volume bernama 'db-data' untuk menyimpan data secara persisten
       - db-data:/var/lib/postgresql/data
+    # BLOK BARU: Untuk memeriksa kesehatan database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
-  db-data: # Mendefinisikan volume yang akan kita gunakan
+  db-data:
