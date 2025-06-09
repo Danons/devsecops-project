@@ -120,7 +120,7 @@ jobs:
       
       - name: Wait for application to be ready
         # Beri waktu beberapa detik agar aplikasi di dalam container siap
-        run: sleep 15
+        run: sleep 30
 
       - name: Run DAST Scan on Local Application
         # Menjalankan ZAP Scan dari runner yang sama ke aplikasi yang juga berjalan di mesin yang sama
