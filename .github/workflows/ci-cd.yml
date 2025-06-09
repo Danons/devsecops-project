@@ -48,8 +48,7 @@ jobs:
         run: npm audit --audit-level=critical
 
   dast_scan:
-    # Hanya berjalan saat push ke branch 'develop'
-    needs: sast_scan
+    needs: deploy_staging
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -67,8 +66,6 @@ jobs:
           # Di skenario nyata, job 'deploy_staging' akan berjalan sebelum 'dast_scan'.
 
   deploy_staging:
-    # Hanya berjalan saat push ke branch 'develop' dan scan berhasil
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs: sast_scan # Idealnya juga 'dast_scan'
     runs-on: ubuntu-latest
     steps:
