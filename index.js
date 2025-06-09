@@ -1,38 +1,75 @@
-// Import dependencies
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const helmet = require('helmet');
 const morgan = require('morgan');
-require('dotenv').config(); // Untuk memuat environment variables
+require('dotenv').config();
+const { Pool } = require('pg'); // Import library pg
+
+// --- Konfigurasi Koneksi Database ---
+// Menggunakan variabel lingkungan untuk koneksi
+const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+});
+
+// --- Fungsi untuk Inisialisasi Database ---
+// Membuat tabel jika belum ada saat aplikasi pertama kali berjalan
+async function initializeDatabase() {
+    const client = await pool.connect();
+    try {
+        // Membuat tabel users (jika belum ada)
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                password VARCHAR(50) NOT NULL 
+            );
+        `);
+        // Membuat tabel tasks (jika belum ada)
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS tasks (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                completed BOOLEAN DEFAULT false
+            );
+        `);
+        
+        // Menambahkan user 'admin' jika belum ada
+        const res = await client.query("SELECT * FROM users WHERE username = 'admin'");
+        if (res.rowCount === 0) {
+            // Di aplikasi nyata, password HARUS di-hash menggunakan bcrypt
+            await client.query("INSERT INTO users (username, password) VALUES ('admin', 'password')");
+            console.log("Default user 'admin' created.");
+        }
+        console.log("Database initialized successfully.");
+    } finally {
+        client.release();
+    }
+}
+
 
 const app = express();
 const port = 3000;
 
-// In-memory "database" untuk kesederhanaan
-let tasks = [
-    { id: 1, title: 'Setup project', completed: true },
-    { id: 2, title: 'Write code', completed: false }
-];
-let nextTaskId = 3;
-
-// Middleware Setup
-app.use(helmet()); // Keamanan dasar: set HTTP headers
-app.use(morgan('combined')); // Logging
+// --- Middleware Setup ---
+app.use(helmet());
+app.use(morgan('combined'));
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public')); // Melayani file statis (CSS, JS)
-app.set('view engine', 'ejs'); // Set view engine
+app.use(express.static('public'));
+app.set('view engine', 'ejs');
 
-// Konfigurasi Session
-// SECURITY: Gunakan secret yang kuat dan simpan di environment variable
 app.use(session({
     secret: process.env.SESSION_SECRET || 'a-very-weak-secret',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set 'true' jika menggunakan HTTPS
+    cookie: { secure: false }
 }));
 
-// Middleware untuk memeriksa autentikasi
+// --- Middleware Autentikasi ---
 function isAuthenticated(req, res, next) {
     if (req.session.user) {
         return next();
@@ -40,20 +77,24 @@ function isAuthenticated(req, res, next) {
     res.redirect('/login');
 }
 
-// Routes
+// --- Rute Autentikasi ---
 app.get('/login', (req, res) => {
     res.render('login');
 });
 
-app.post('/login', (req, res) => {
-    // SECURITY: Validasi input sederhana. Di aplikasi nyata, gunakan library seperti express-validator.
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    // Autentikasi dummy
-    if (username === 'admin' && password === 'password') {
-        req.session.user = { username: 'admin' };
-        res.redirect('/');
-    } else {
-        res.send('Invalid credentials');
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE username = $1 AND password = $2', [username, password]);
+        if (result.rowCount > 0) {
+            req.session.user = result.rows[0];
+            res.redirect('/');
+        } else {
+            res.send('Invalid credentials');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server error");
     }
 });
 
@@ -62,40 +103,57 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-// Halaman utama (dilindungi autentikasi)
-app.get('/', isAuthenticated, (req, res) => {
-    res.render('index', { tasks: tasks });
+// --- Rute Aplikasi Utama ---
+app.get('/', isAuthenticated, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM tasks ORDER BY id ASC');
+        res.render('index', { tasks: result.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server error");
+    }
 });
 
-// API Endpoints untuk CRUD
-// Create
-app.post('/tasks', isAuthenticated, (req, res) => {
+// --- Rute CRUD (menggunakan SQL) ---
+app.post('/tasks', isAuthenticated, async (req, res) => {
     const { title } = req.body;
-    if (title) { // SECURITY: Validasi input dasar
-        const newTask = { id: nextTaskId++, title, completed: false };
-        tasks.push(newTask);
+    if (title) {
+        try {
+            await pool.query('INSERT INTO tasks (title) VALUES ($1)', [title]);
+        } catch (err) {
+            console.error(err);
+        }
     }
     res.redirect('/');
 });
 
-// Update
-app.post('/tasks/:id/toggle', isAuthenticated, (req, res) => {
-    const task = tasks.find(t => t.id === parseInt(req.params.id));
-    if (task) {
-        task.completed = !task.completed;
+app.post('/tasks/:id/toggle', isAuthenticated, async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('UPDATE tasks SET completed = NOT completed WHERE id = $1', [id]);
+    } catch (err) {
+        console.error(err);
     }
     res.redirect('/');
 });
 
-// Delete
-app.post('/tasks/:id/delete', isAuthenticated, (req, res) => {
-    tasks = tasks.filter(t => t.id !== parseInt(req.params.id));
+app.post('/tasks/:id/delete', isAuthenticated, async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
+    } catch (err) {
+        console.error(err);
+    }
     res.redirect('/');
 });
 
-// Jalankan server
-const server = app.listen(port, () => {
-    console.log(`App listening at http://localhost:${port}`);
+// --- Menjalankan Server ---
+app.listen(port, async () => {
+    try {
+        await initializeDatabase(); // Panggil inisialisasi database sebelum server siap
+        console.log(`App listening at http://localhost:${port}`);
+    } catch (err) {
+        console.error("Failed to initialize database:", err);
+        process.exit(1); // Keluar jika database gagal diinisialisasi
+    }
 });
-
-module.exports = { app, server }; // Ekspor untuk testing
