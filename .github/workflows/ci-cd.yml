@@ -80,56 +80,32 @@ jobs:
 
   deploy_and_scan_on_staging:
     name: Deploy and DAST Scan on Staging
-    # Job ini bergantung pada 2 job sebelumnya
     needs: [build_and_test, sast_scan]
-    # PERUBAHAN KUNCI: Menjalankan job ini di runner kita sendiri
     runs-on: self-hosted 
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
-
-      - name: Deploy Application Locally on Runner
+      - name: Create .env file for Docker Compose
+        # Langkah ini membuat file .env di runner menggunakan secrets
         run: |
-          echo "Deploying application on self-hosted runner..."
-          docker pull ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
-          docker stop my-app || true
-          docker rm my-app || true
-          docker run -d --name my-app \
-            --network=host \
-            --restart always \
-            -e SESSION_SECRET='${{ secrets.SESSION_SECRET }}' \
-            -e DB_USER='${{ secrets.DB_USER }}' \
-            -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
-            -e DB_NAME='${{ secrets.DB_NAME }}' \
-            -e DB_HOST='localhost' \
-            -e DB_PORT='${{ secrets.DB_PORT }}' \
-            ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
-      
+          echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" > .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "DB_HOST=db" >> .env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+
+      - name: Deploy Application with Docker Compose
+        # Perintah ini akan membaca docker-compose.yml dan .env untuk menjalankan semuanya
+        run: docker-compose up --build -d
+
       - name: Wait for application to be ready
-        # Beri waktu beberapa detik agar aplikasi di dalam container siap
         run: sleep 30
 
       - name: Run DAST Scan on Local Application
-        # Menjalankan ZAP Scan dari runner yang sama ke aplikasi yang juga berjalan di mesin yang sama
-        continue-on-error: true
+        # Kita kembalikan target ke 3001 sesuai port di docker-compose.yml
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          # Targetnya adalah localhost, karena scanner dan aplikasi ada di mesin yang sama
-          target: 'http://localhost:3000'
+          target: 'http://localhost:3001'
