@@ -49,7 +49,6 @@ jobs:
 
   dast_scan:
     # Hanya berjalan saat push ke branch 'develop'
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs: sast_scan
     runs-on: ubuntu-latest
     steps:
