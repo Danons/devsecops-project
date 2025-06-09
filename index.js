@@ -4,10 +4,9 @@ const session = require('express-session');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
-const { Pool } = require('pg'); // Import library pg
+const { Pool } = require('pg');
 
-// --- Konfigurasi Koneksi Database ---
-// Menggunakan variabel lingkungan untuk koneksi
+// Konfigurasi Koneksi Database
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -16,20 +15,17 @@ const pool = new Pool({
     port: process.env.DB_PORT,
 });
 
-// --- Fungsi untuk Inisialisasi Database ---
-// Membuat tabel jika belum ada saat aplikasi pertama kali berjalan
+// Fungsi untuk Inisialisasi Database
 async function initializeDatabase() {
     const client = await pool.connect();
     try {
-        // Membuat tabel users (jika belum ada)
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 username VARCHAR(50) UNIQUE NOT NULL,
-                password VARCHAR(50) NOT NULL 
+                password VARCHAR(50) NOT NULL
             );
         `);
-        // Membuat tabel tasks (jika belum ada)
         await client.query(`
             CREATE TABLE IF NOT EXISTS tasks (
                 id SERIAL PRIMARY KEY,
@@ -37,11 +33,8 @@ async function initializeDatabase() {
                 completed BOOLEAN DEFAULT false
             );
         `);
-        
-        // Menambahkan user 'admin' jika belum ada
         const res = await client.query("SELECT * FROM users WHERE username = 'admin'");
         if (res.rowCount === 0) {
-            // Di aplikasi nyata, password HARUS di-hash menggunakan bcrypt
             await client.query("INSERT INTO users (username, password) VALUES ('admin', 'password')");
             console.log("Default user 'admin' created.");
         }
@@ -51,17 +44,15 @@ async function initializeDatabase() {
     }
 }
 
-
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// --- Middleware Setup ---
+// Middleware Setup
 app.use(helmet());
 app.use(morgan('combined'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
-
 app.use(session({
     secret: process.env.SESSION_SECRET || 'a-very-weak-secret',
     resave: false,
@@ -69,96 +60,65 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-// --- Middleware Autentikasi ---
+// --- Rute-rute aplikasi (tidak ada perubahan di sini) ---
 function isAuthenticated(req, res, next) {
-    if (req.session.user) {
-        return next();
-    }
+    if (req.session.user) return next();
     res.redirect('/login');
 }
-
-// --- Rute Autentikasi ---
-app.get('/login', (req, res) => {
-    res.render('login');
-});
-
+app.get('/login', (req, res) => res.render('login'));
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE username = $1 AND password = $2', [username, password]);
-        if (result.rowCount > 0) {
-            req.session.user = result.rows[0];
-            res.redirect('/');
-        } else {
-            res.send('Invalid credentials');
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server error");
+    const result = await pool.query('SELECT * FROM users WHERE username = $1 AND password = $2', [username, password]);
+    if (result.rowCount > 0) {
+        req.session.user = result.rows[0];
+        res.redirect('/');
+    } else {
+        res.send('Invalid credentials');
     }
 });
-
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');
 });
-
-// --- Rute Aplikasi Utama ---
 app.get('/', isAuthenticated, async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM tasks ORDER BY id ASC');
-        res.render('index', { tasks: result.rows });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server error");
-    }
+    const result = await pool.query('SELECT * FROM tasks ORDER BY id ASC');
+    res.render('index', { tasks: result.rows });
 });
-
-// --- Rute CRUD (menggunakan SQL) ---
 app.post('/tasks', isAuthenticated, async (req, res) => {
     const { title } = req.body;
-    if (title) {
-        try {
-            await pool.query('INSERT INTO tasks (title) VALUES ($1)', [title]);
-        } catch (err) {
-            console.error(err);
-        }
-    }
+    if (title) await pool.query('INSERT INTO tasks (title) VALUES ($1)', [title]);
     res.redirect('/');
 });
-
 app.post('/tasks/:id/toggle', isAuthenticated, async (req, res) => {
-    const { id } = req.params;
-    try {
-        await pool.query('UPDATE tasks SET completed = NOT completed WHERE id = $1', [id]);
-    } catch (err) {
-        console.error(err);
-    }
+    await pool.query('UPDATE tasks SET completed = NOT completed WHERE id = $1', [req.params.id]);
     res.redirect('/');
 });
-
 app.post('/tasks/:id/delete', isAuthenticated, async (req, res) => {
-    const { id } = req.params;
-    try {
-        await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
-    } catch (err) {
-        console.error(err);
-    }
+    await pool.query('DELETE FROM tasks WHERE id = $1', [req.params.id]);
     res.redirect('/');
 });
 
 // --- Menjalankan Server ---
-app.listen(port, async () => {
-    try {
-        await initializeDatabase(); // Panggil inisialisasi database sebelum server siap
+// Kita akan membuat variabel server di scope yang lebih luas
+let server;
+
+// Fungsi untuk memulai server
+async function startServer() {
+    await initializeDatabase();
+    server = app.listen(port, () => {
         console.log(`App listening at http://localhost:${port}`);
-    } catch (err) {
-        console.error("Failed to initialize database:", err);
-        process.exit(1); // Keluar jika database gagal diinisialisasi
-    }
-});
+    });
+    return server;
+}
 
-// ... (kode app.listen berada di atas baris ini) ...
+// Kondisi ini akan menjalankan server hanya jika file dieksekusi langsung (node index.js)
+// dan tidak akan berjalan saat di-import oleh file tes
+if (require.main === module) {
+    startServer().catch(err => {
+        console.error("Failed to start server:", err);
+        process.exit(1);
+    });
+}
 
-// Ekspor variabel agar bisa digunakan oleh file lain, terutama untuk testing
-module.exports = { app, server, pool };
+// Ekspor app dan pool untuk testing. Server akan dikelola oleh file tes.
+module.exports = { app, pool };
