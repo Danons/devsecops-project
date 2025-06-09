@@ -12,54 +12,21 @@ permissions:
 jobs:
   build_and_test:
 
-  build_and_test:
+    # Job ini tetap berjalan di server GitHub untuk testing awal
     runs-on: ubuntu-latest
-    
-    # =======================================================
-    # BAGIAN BARU: Menambahkan Service Container PostgreSQL
-    # =======================================================
-    services:
-      postgres:
-        image: postgres:15-alpine
-        # Variabel lingkungan untuk database sementara
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpassword
-          POSTGRES_DB: testdb
-        # Opsi untuk memeriksa kesehatan database sebelum tes dijalankan
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-
       - name: Install dependencies
         run: npm install
-
-      # =======================================================
-      # PERUBAHAN: Menambahkan variabel lingkungan untuk tes
-      # =======================================================
       - name: Run Unit Tests
-        env:
-          # Variabel ini akan digunakan oleh aplikasi saat 'npm test' berjalan
-          DB_HOST: localhost 
-          DB_PORT: 5432 # Gunakan port yang dipetakan dari service container
-          DB_USER: testuser
-          DB_PASSWORD: testpassword
-          DB_NAME: testdb
-          SESSION_SECRET: a-test-secret-for-ci
-          run: npm test
+        run: npm test
+
+  
 
   sast_scan:
     needs: build_and_test
