@@ -112,14 +112,14 @@ jobs:
           docker stop my-app || true
           docker rm my-app || true
           docker run -d --name my-app \
-            --network=host \ # <-- Tambahkan ini untuk menyederhanakan koneksi
+            --network=host \
             -p 3001:3000 \
             --restart always \
             -e SESSION_SECRET='${{ secrets.SESSION_SECRET }}' \
             -e DB_USER='${{ secrets.DB_USER }}' \
             -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
             -e DB_NAME='${{ secrets.DB_NAME }}' \
-            -e DB_HOST='localhost' \ # <-- Gunakan localhost karena network=host
+            -e DB_HOST='localhost' \
             -e DB_PORT='${{ secrets.DB_PORT }}' \
             ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
       
