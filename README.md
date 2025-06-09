@@ -8,29 +8,29 @@ Proyek ini dibuat untuk memenuhi semua persyaratan dari Tugas Besar "Project CLO
 
 ## Tumpukan Teknologi (Tech Stack)
 
-* [cite_start]**Backend**: Node.js, Express.js [cite: 67]
-* [cite_start]**Frontend**: EJS (Embedded JavaScript), HTML, CSS [cite: 68]
+* **Backend**: Node.js, Express.js
+* **Frontend**: EJS (Embedded JavaScript), HTML, CSS 
 * **Database**: In-Memory (JavaScript Array) untuk kesederhanaan
-* [cite_start]**Testing**: Jest, Supertest [cite: 73]
-* [cite_start]**Containerization**: Docker, Docker Compose [cite: 77]
-* [cite_start]**CI/CD Platform**: GitHub Actions [cite: 72]
+* **Testing**: Jest, Supertest 
+* **Containerization**: Docker, Docker Compose 
+* **CI/CD Platform**: GitHub Actions 
 * **Security Scanning**:
-    * [cite_start]**SAST**: npm audit [cite: 74]
-    * [cite_start]**DAST**: OWASP ZAP [cite: 75]
-* [cite_start]**Deployment Target**: Self-Hosted Runner di dalam VM lokal (VirtualBox Ubuntu) [cite: 83]
+    * **SAST**: npm audit 
+    * **DAST**: OWASP ZAP 
+* **Deployment Target**: Self-Hosted Runner di dalam VM lokal (VirtualBox Ubuntu) 
 
 ## Fitur Aplikasi
 
-* [cite_start]Autentikasi pengguna berbasis sesi[cite: 69].
-* [cite_start]Operasi CRUD (Create, Read, Update, Delete) penuh untuk manajemen tugas[cite: 68].
-* [cite_start]Logging permintaan HTTP sederhana menggunakan `morgan`[cite: 82].
-* [cite_start]Penggunaan `helmet` untuk menerapkan header keamanan HTTP dasar[cite: 80].
+* Autentikasi pengguna berbasis sesi.
+* Operasi CRUD (Create, Read, Update, Delete) penuh untuk manajemen tugas.
+* Logging permintaan HTTP sederhana menggunakan `morgan`.
+* Penggunaan `helmet` untuk menerapkan header keamanan HTTP dasar.
 
 ## Struktur Proyek
 
 * **`.github/`** - Folder untuk konfigurasi GitHub.
     * **`workflows/`** - Folder untuk pipeline CI/CD.
-        * [cite_start]`ci-cd.yml` - File definisi pipeline GitHub Actions. [cite: 86]
+        * `ci-cd.yml` - File definisi pipeline GitHub Actions.
 * **`public/`** - Folder untuk aset publik (frontend).
     * **`css/`**
         * `style.css` - File styling (CSS).
@@ -40,9 +40,9 @@ Proyek ini dibuat untuk memenuhi semua persyaratan dari Tugas Besar "Project CLO
 * **`tests/`** - Folder untuk semua file pengujian.
     * `app.test.js` - File unit/integration test untuk aplikasi.
 * `.dockerignore` - Daftar file yang diabaikan oleh Docker.
-* [cite_start]`.env` - File untuk menyimpan variabel lingkungan lokal (RAHASIA). [cite: 81]
+* `.env` - File untuk menyimpan variabel lingkungan lokal (RAHASIA). 
 * `.gitignore` - Daftar file yang diabaikan oleh Git.
-* [cite_start]`Dockerfile` - Resep untuk membangun image Docker aplikasi. [cite: 77]
+* `Dockerfile` - Resep untuk membangun image Docker aplikasi. 
 * `docker-compose.yml` - File untuk menjalankan aplikasi dengan mudah di lingkungan lokal.
 * `index.js` - File utama aplikasi Node.js/Express.
 * `package.json` - Menyimpan daftar dependensi & skrip proyek.
@@ -74,27 +74,27 @@ Untuk menjalankan aplikasi ini di komputer lokal Anda, pastikan Docker dan Docke
 
 ## Alur Kerja CI/CD
 
-[cite_start]Pipeline CI/CD proyek ini dikonfigurasi di `.github/workflows/ci-cd.yml` dan berjalan secara otomatis setiap kali ada `push` ke branch `main`. [cite: 72, 84]
+Pipeline CI/CD proyek ini dikonfigurasi di `.github/workflows/ci-cd.yml` dan berjalan secara otomatis setiap kali ada `push` ke branch `main`.
 
 Pipeline ini terdiri dari beberapa tahapan (jobs):
 
 1.  **`build_and_test`**:
     * Berjalan di server GitHub (`ubuntu-latest`).
-    * [cite_start]Melakukan instalasi dependensi (`npm install`). [cite: 73]
-    * [cite_start]Menjalankan unit test (`npm test`) untuk memastikan fungsionalitas dasar tidak rusak. [cite: 73]
+    * Melakukan instalasi dependensi (`npm install`). 
+    * Menjalankan unit test (`npm test`) untuk memastikan fungsionalitas dasar tidak rusak. 
 
 2.  **`sast_scan`**:
     * Berjalan di server GitHub (`ubuntu-latest`).
-    * Menjalankan `npm audit --audit-level=critical` untuk memindai kerentanan pada dependensi proyek (SAST). [cite_start]Jika ditemukan kerentanan level `critical`, pipeline akan gagal. [cite: 74, 79]
+    * Menjalankan `npm audit --audit-level=critical` untuk memindai kerentanan pada dependensi proyek (SAST). Jika ditemukan kerentanan level `critical`, pipeline akan gagal. 
 
 3.  **`deploy_and_scan_on_staging`**:
     * Berjalan di `self-hosted runner` yang telah dikonfigurasi di VM staging.
-    * [cite_start]**Deployment**: Membangun image Docker baru, mendorongnya ke Docker Hub, lalu menghentikan container lama dan menjalankan container baru di server staging. [cite: 76]
-    * [cite_start]**DAST Scan**: Menjalankan OWASP ZAP Baseline Scan terhadap aplikasi yang baru saja di-deploy (`http://localhost:3001` dari perspektif runner). [cite: 75, 84]
+    * **Deployment**: Membangun image Docker baru, mendorongnya ke Docker Hub, lalu menghentikan container lama dan menjalankan container baru di server staging.
+    * **DAST Scan**: Menjalankan OWASP ZAP Baseline Scan terhadap aplikasi yang baru saja di-deploy (`http://localhost:3001` dari perspektif runner).
 
 ## Kontrol Versi (Version Control)
 
-[cite_start]Proyek ini menggunakan **Git** dan di-host di **GitHub**. [cite: 70, 85] Strategi branching yang direkomendasikan adalah:
+Proyek ini menggunakan **Git** dan di-host di **GitHub**. Strategi branching yang direkomendasikan adalah:
 * **`main`**: Branch utama yang selalu berisi kode stabil dan siap untuk di-deploy.
 * **`develop`**: Branch untuk integrasi semua fitur baru.
-* [cite_start]**`feature/*`**: Branch-branch untuk pengembangan fitur spesifik, dibuat dari `develop`. [cite: 71]
+* **`feature/*`**: Branch-branch untuk pengembangan fitur spesifik, dibuat dari `develop`. 
