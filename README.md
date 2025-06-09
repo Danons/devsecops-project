@@ -4,7 +4,7 @@
 
 Proyek ini merupakan implementasi dari aplikasi web sederhana (To-Do List) yang dibangun dengan siklus hidup pengembangan perangkat lunak yang aman (DevSecOps) secara menyeluruh. Tujuan utamanya adalah untuk membangun, menguji, dan men-deploy aplikasi secara otomatis melalui pipeline CI/CD yang mengintegrasikan praktik-praktik keamanan.
 
-Proyek ini dibuat untuk memenuhi semua persyaratan dari Tugas Besar "Project CLO4".
+Proyek ini dibuat untuk memenuhi semua persyaratan dari Tugas Besar.
 
 ## Tumpukan Teknologi (Tech Stack)
 
