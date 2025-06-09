@@ -157,3 +157,8 @@ app.listen(port, async () => {
         process.exit(1); // Keluar jika database gagal diinisialisasi
     }
 });
+
+// ... (kode app.listen berada di atas baris ini) ...
+
+// Ekspor variabel agar bisa digunakan oleh file lain, terutama untuk testing
+module.exports = { app, server, pool };

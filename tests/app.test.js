@@ -1,10 +1,18 @@
 const request = require('supertest');
-const { app, server } = require('../index'); // Sesuaikan path
+// Impor 'pool' untuk bisa menutup koneksi database
+const { app, server, pool } = require('../index');
 
-afterAll((done) => {
-    server.close(done); // Tutup server setelah semua tes selesai
+// Gunakan afterAll untuk memastikan server dan koneksi database ditutup setelah semua tes selesai
+afterAll(async () => {
+    // Menunggu server aplikasi benar-benar tertutup
+    if (server) {
+        await new Promise(resolve => server.close(resolve));
+    }
+    // Menutup semua koneksi di pool database
+    await pool.end();
 });
 
+// Blok describe untuk tes Anda tetap sama
 describe('GET /', () => {
     it('should redirect to /login if not authenticated', async () => {
         const res = await request(app).get('/');
