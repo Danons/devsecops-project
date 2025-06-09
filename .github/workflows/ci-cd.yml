@@ -106,7 +106,6 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
 
       - name: Deploy Application Locally on Runner
-        # Perintah ini dijalankan langsung di terminal VM, tanpa SSH
         run: |
           echo "Deploying application on self-hosted runner..."
           docker pull ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
