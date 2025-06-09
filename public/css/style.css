@@ -1,6 +1,180 @@
-body { font-family: sans-serif; background: #f4f4f4; }
-.container { max-width: 600px; margin: 50px auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-.completed { text-decoration: line-through; color: #888; }
-.task-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; }
-.actions button { margin-left: 5px; border: none; padding: 5px 10px; cursor: pointer; }
-.delete { background: #e74c3c; color: white; }
+/* --- Import Font dari Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+/* --- Reset & Pengaturan Body --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f7f6; /* Warna latar belakang sedikit abu-abu */
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* --- Container Utama --- */
+.container {
+    background: #ffffff;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.07);
+    width: 100%;
+    max-width: 600px;
+}
+
+h1 {
+    margin-bottom: 25px;
+    color: #2c3e50; /* Warna biru tua untuk judul */
+    font-weight: 600;
+    text-align: center;
+}
+
+/* --- Header di Halaman Utama --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.header h1 {
+    margin-bottom: 0;
+}
+
+.header a {
+    text-decoration: none;
+    color: #3498db; /* Warna biru sebagai aksen */
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.header a:hover {
+    color: #2980b9;
+}
+
+/* --- Formulir (Login & Tambah Tugas) --- */
+form {
+    width: 100%;
+}
+
+.task-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #dfe4ea;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15);
+}
+
+form:not(.task-form) {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+button[type="submit"] {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #3498db;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button[type="submit"]:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+/* --- Daftar Tugas --- */
+.task-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+}
+
+.task-list li {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.task-list li:last-child {
+    border-bottom: none;
+}
+
+.task-list li.completed span {
+    text-decoration: line-through;
+    color: #bdc3c7; /* Warna abu-abu untuk tugas selesai */
+}
+
+.task-list li span {
+    flex-grow: 1;
+    margin-right: 15px;
+    word-break: break-word;
+}
+
+.task-list .actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0; /* Mencegah tombol mengecil */
+}
+
+.task-list .actions form {
+    display: inline-block;
+}
+
+.task-list .actions button {
+    padding: 5px 10px;
+    font-size: 13px;
+    border: 1px solid #ced6e0;
+    background-color: #ffffff;
+    color: #576574;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.task-list .actions button:hover {
+    background-color: #f1f2f6;
+    border-color: #576574;
+}
+
+.task-list .actions .delete {
+    border-color: transparent;
+    background-color: transparent;
+    color: #e74c3c; /* Warna merah untuk tombol hapus */
+}
+
+.task-list .actions .delete:hover {
+    background-color: #e74c3c;
+    color: white;
+}
