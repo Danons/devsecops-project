@@ -2,25 +2,23 @@ name: DevSecOps CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ] # Kita sederhanakan hanya berjalan di branch main
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
   build_and_test:
+    # Job ini tetap berjalan di server GitHub untuk testing awal
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
-
       - name: Install dependencies
         run: npm install
-
       - name: Run Unit Tests
         run: npm test
 
@@ -29,73 +27,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
+        uses: actions/checkout@v4
       - name: Install dependencies
         run: npm install
-
-      # - name: Run ESLint (Linting)
-        # run: npx eslint . --ext .js # Anda perlu konfigurasi ESLint
-        # Untuk kesederhanaan, kita lewati setup ESLint. Tambahkan jika perlu.
-
       - name: Run NPM Audit (Dependency Scanning)
-        # Gagal jika ditemukan kerentanan CRITICAL
         run: npm audit --audit-level=critical
 
-  dast_scan:
-    needs: deploy_staging
-    runs-on: ubuntu-latest
+  deploy_and_scan_on_staging:
+    name: Deploy and DAST Scan on Staging
+    # Job ini bergantung pada 2 job sebelumnya
+    needs: [build_and_test, sast_scan]
+    # PERUBAHAN KUNCI: Menjalankan job ini di runner kita sendiri
+    runs-on: self-hosted 
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Run ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.10.0
-        with:
-          # Kita perlu menjalankan aplikasi di dalam CI untuk dipindai.
-          # Cara termudah adalah menggunakan Docker.
-          docker_name: 'ghcr.io/zaproxy/zaproxy:stable'
-          target: 'http://${{ secrets.STAGING_HOST }}:3001'
-          # Untuk DAST yang benar, aplikasi harus di-deploy ke env test terlebih dahulu.
-          # Untuk contoh ini, kita akan menunjuk ke URL placeholder.
-          # Di skenario nyata, job 'deploy_staging' akan berjalan sebelum 'dast_scan'.
-
-  deploy_staging:
-    needs: sast_scan # Idealnya juga 'dast_scan'
-    runs-on: self-hosted
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Login to Docker Hub (atau registry lain)
-        uses: docker/login-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
 
-      - name: Deploy to Staging Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.STAGING_PORT }}
-          script: |
-            # ... (perintah docker pull, stop, rm tetap sama) ...  
-            docker run -d --name my-app \
-            -p 3001:3000 \ # <-- UBAH BARIS INI
+      - name: Deploy Application Locally on Runner
+        # Perintah ini dijalankan langsung di terminal VM, tanpa SSH
+        run: |
+          echo "Deploying application on self-hosted runner..."
+          docker pull ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
+          docker stop my-app || true
+          docker rm my-app || true
+          docker run -d --name my-app \
+            -p 3001:3000 \
             --restart always \
             -e SESSION_SECRET='${{ secrets.SESSION_SECRET }}' \
             ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
+      
+      - name: Wait for application to be ready
+        # Beri waktu beberapa detik agar aplikasi di dalam container siap
+        run: sleep 15
+
+      - name: Run DAST Scan on Local Application
+        # Menjalankan ZAP Scan dari runner yang sama ke aplikasi yang juga berjalan di mesin yang sama
+        uses: zaproxy/action-baseline@v0.11.0
+        with:
+          # Targetnya adalah localhost, karena scanner dan aplikasi ada di mesin yang sama
+          target: 'http://localhost:3001'
