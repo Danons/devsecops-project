@@ -61,7 +61,7 @@ jobs:
           # Kita perlu menjalankan aplikasi di dalam CI untuk dipindai.
           # Cara termudah adalah menggunakan Docker.
           docker_name: 'ghcr.io/zaproxy/zaproxy:stable'
-          target: 'http://<IP-Aplikasi-Staging-Anda>:3000'
+          target: 'http://${{ secrets.STAGING_HOST }}:3001'
           # Untuk DAST yang benar, aplikasi harus di-deploy ke env test terlebih dahulu.
           # Untuk contoh ini, kita akan menunjuk ke URL placeholder.
           # Di skenario nyata, job 'deploy_staging' akan berjalan sebelum 'dast_scan'.
