@@ -95,6 +95,7 @@ jobs:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.STAGING_PORT }}
           script: |
             # Tarik image terbaru dan jalankan ulang container
             docker pull ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
