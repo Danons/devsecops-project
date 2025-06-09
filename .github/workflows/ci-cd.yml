@@ -93,12 +93,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.STAGING_PORT }}
           script: |
-            # Tarik image terbaru dan jalankan ulang container
-            docker pull ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
-            docker stop my-app || true
-            docker rm my-app || true
+            # ... (perintah docker pull, stop, rm tetap sama) ...  
             docker run -d --name my-app \
-              -p 3000:3000 \
-              --restart always \
-              -e SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
-              ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
+            -p 3001:3000 \ # <-- UBAH BARIS INI
+            --restart always \
+            -e SESSION_SECRET='${{ secrets.SESSION_SECRET }}' \
+            ${{ secrets.DOCKER_USERNAME }}/devsecops-project:latest
