@@ -132,4 +132,4 @@ jobs:
         uses: zaproxy/action-baseline@v0.12.0
         with:
           # Targetnya adalah localhost, karena scanner dan aplikasi ada di mesin yang sama
-          target: 'http://localhost:3001'
+          target: 'http://localhost:3000'
