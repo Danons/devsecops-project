@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  issues: write
+
 jobs:
   build_and_test:
     # Job ini tetap berjalan di server GitHub untuk testing awal
