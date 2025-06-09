@@ -54,7 +54,7 @@ Untuk menjalankan aplikasi ini di komputer lokal Anda, pastikan Docker dan Docke
 
 1.  **Clone repository ini:**
     ```bash
-    git clone [URL_REPOSITORY_ANDA]
+    git clone https://github.com/Danons/devsecops-project
     cd devsecops-project
     ```
 
