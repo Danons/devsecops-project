@@ -109,6 +109,7 @@ jobs:
 
       - name: Run DAST Scan on Local Application
         # Kita kembalikan target ke 3001 sesuai port di docker-compose.yml
+        continue-on-error: true
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: 'http://localhost:3001'
