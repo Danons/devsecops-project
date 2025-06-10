@@ -98,8 +98,11 @@ jobs:
           echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
 
       - name: Deploy Application with Docker Compose
-        # Perintah ini akan membaca docker-compose.yml dan .env untuk menjalankan semuanya
-        run: docker-compose up --build -d
+        run: |
+          # Hentikan dan hapus semua container & volume lama dari proses sebelumnya
+          docker-compose down -v --remove-orphans
+          # Jalankan dari awal yang bersih
+          docker-compose up --build -d
 
       - name: Wait for application to be ready
         run: sleep 30
