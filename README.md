@@ -10,8 +10,8 @@ Proyek ini dibuat untuk memenuhi semua persyaratan dari Tugas Besar.
 
 * **Backend**: Node.js, Express.js
 * **Frontend**: EJS (Embedded JavaScript), HTML, CSS 
-* **Database**: In-Memory (JavaScript Array) untuk kesederhanaan
-* **Testing**: Jest, Supertest 
+* **Database**: PostgreSQL
+* **Testing**: Jest, Supertest
 * **Containerization**: Docker, Docker Compose 
 * **CI/CD Platform**: GitHub Actions 
 * **Security Scanning**:
@@ -34,6 +34,8 @@ Proyek ini dibuat untuk memenuhi semua persyaratan dari Tugas Besar.
 * **`public/`** - Folder untuk aset publik (frontend).
     * **`css/`**
         * `style.css` - File styling (CSS).
+* **`routes/` - Folder untuk menyimpan API
+    * **`api.js` - File untuk menyimpan api.js
 * **`views/`** - Folder untuk file template EJS (halaman HTML dinamis).
     * `index.ejs` - Tampilan halaman utama.
     * `login.ejs` - Tampilan halaman login.
@@ -96,5 +98,3 @@ Pipeline ini terdiri dari beberapa tahapan (jobs):
 
 Proyek ini menggunakan **Git** dan di-host di **GitHub**. Strategi branching yang direkomendasikan adalah:
 * **`main`**: Branch utama yang selalu berisi kode stabil dan siap untuk di-deploy.
-* **`develop`**: Branch untuk integrasi semua fitur baru.
-* **`feature/*`**: Branch-branch untuk pengembangan fitur spesifik, dibuat dari `develop`. 
